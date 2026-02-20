@@ -71,6 +71,7 @@ module snitch_cc #(
   parameter bit          XF16ALT            = 0,
   parameter bit          XFVEC              = 0,
   parameter bit          XFDOTP             = 0,
+  parameter bit          XFMXDOTP           = 0,
   parameter bit          Xpulppostmod       = 0,
   parameter bit          Xpulpabs           = 0,
   parameter bit          Xpulpbitop         = 0,
@@ -202,7 +203,7 @@ module snitch_cc #(
 
   // FMA architecture is "merged" -> mulexp and macexp instructions are supported
   localparam bit XFauxMerged  = (FPUImplementation.UnitTypes[3] == fpnew_pkg::MERGED);
-  localparam bit FPEn = RVF | RVD | XF16 | XF16ALT | XF8 | XF8ALT | XFVEC | XFauxMerged | XFDOTP;
+  localparam bit FPEn = RVF | RVD | XF16 | XF16ALT | XF8 | XF8ALT | XFVEC | XFauxMerged | XFDOTP | XFMXDOTP;
   localparam bit Xpulpv2 = Xpulpabs | Xpulpbitop | Xpulpbr | Xpulpclip | Xpulpmacsi | Xpulpminmax |
                            Xpulpslet | Xpulpvect | Xpulpvectshufflepack;
   localparam int unsigned FLEN = RVD     ? 64 : // D ext.
@@ -334,6 +335,7 @@ module snitch_cc #(
     .XF8ALT (XF8ALT),
     .XFVEC (XFVEC),
     .XFDOTP (XFDOTP),
+    .XFMXDOTP (XFMXDOTP),
     .XFAUX (XFauxMerged),
     .FLEN (FLEN),
     .CaqDepth (CaqDepth),
@@ -666,6 +668,7 @@ module snitch_cc #(
       .XF8 (XF8),
       .XF8ALT (XF8ALT),
       .XFVEC (XFVEC),
+      .XFMXDOTP (XFMXDOTP),
       .FLEN (FLEN),
       .EnableDca (EnableDca)
     ) i_snitch_fp_ss (

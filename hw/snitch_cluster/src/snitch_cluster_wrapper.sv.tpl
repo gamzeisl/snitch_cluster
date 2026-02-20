@@ -147,6 +147,7 @@ module ${cfg['cluster']['name']}_wrapper (
     .XF8ALT (${core_cfg_flat('xf8alt')}),
     .XFVEC (${core_cfg_flat('xfvec')}),
     .XFDOTP (${core_cfg_flat('xfdotp')}),
+    .XFMXDOTP (${core_cfg_flat('xfmxdotp')}),
     .Xdma (${core_cfg_flat('xdma')}),
     .Xssr (${core_cfg_flat('xssr')}),
     .Xfrep (${core_cfg_flat('xfrep')}),
