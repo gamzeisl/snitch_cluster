@@ -42,21 +42,21 @@ packages:
     - scm
     - tech_cells_generic
   common_cells:
-    revision: c27bce39ebb2e6bae52f60960814a2afca7bd4cb
-    version: 1.37.0
+    revision: 9afda9abb565971649c2aa0985639c096f351171
+    version: 1.38.0
     source:
       Git: https://github.com/pulp-platform/common_cells
     dependencies:
     - common_verification
     - tech_cells_generic
   common_verification:
-    revision: 9c07fa860593b2caabd9b5681740c25fac04b878
-    version: 0.2.3
+    revision: fb1885f48ea46164a10568aeff51884389f67ae3
+    version: 0.2.5
     source:
       Git: https://github.com/pulp-platform/common_verification.git
     dependencies: []
   fpnew:
-    revision: a8e0cba6dd50f357ece73c2c955d96efc3c6c315
+    revision: 9211f05a33abc3a179d3e6be533ea47215359c24
     version: null
     source:
       Git: https://github.com/pulp-platform/cvfpu.git
@@ -83,16 +83,16 @@ packages:
     - obi
     - register_interface
   obi:
-    revision: 5321106817e177d6c16ecc4daa922b96b1bc946b
-    version: 0.1.5
+    revision: 0155fc34e900c7c884e081c0a1114a247937ff69
+    version: 0.1.7
     source:
       Git: https://github.com/pulp-platform/obi.git
     dependencies:
     - common_cells
     - common_verification
   register_interface:
-    revision: ae616e5a1ec2b41e72d200e5ab09c65e94aebd3d
-    version: 0.4.4
+    revision: 8e8c209ea559d3b54f45cf30fcce95ce70ff5e49
+    version: 0.4.6
     source:
       Git: https://github.com/pulp-platform/register_interface
     dependencies:
@@ -109,14 +109,15 @@ packages:
     - common_cells
     - tech_cells_generic
   scm:
-    revision: 998466d2a3c2d7d572e43d2666d93c4f767d8d60
-    version: 1.1.1
+    revision: 472f99affe44ff7b282b519c047a3cfeb35b16c6
+    version: 1.2.0
     source:
       Git: https://github.com/pulp-platform/scm.git
-    dependencies: []
+    dependencies:
+    - tech_cells_generic
   tech_cells_generic:
-    revision: 7968dd6e6180df2c644636bc6d2908a49f2190cf
-    version: 0.2.13
+    revision: a9cae21902e75b1434328ecf36f85327ba5717de
+    version: 0.2.11
     source:
       Git: https://github.com/pulp-platform/tech_cells_generic
     dependencies:
