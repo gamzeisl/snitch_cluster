@@ -36,6 +36,7 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
   parameter bit          XDivSqrt  = 0,
   parameter bit          XFVEC     = 0,
   parameter bit          XFDOTP    = 0,
+  parameter bit          XFMXDOTP  = 0,
   parameter bit          XFAUX     = 0,
   int unsigned           FLEN      = DataWidth,
   /// Enable virtual memory support.
@@ -105,6 +106,7 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
   // FPU **un-timed** Side-channel
   output fpnew_pkg::roundmode_e     fpu_rnd_mode_o,
   output fpnew_pkg::fmt_mode_t      fpu_fmt_mode_o,
+  output logic                      fpu_dual_ssr_o,
   input  fpnew_pkg::status_t        fpu_status_i,
   /// Consistency Address Queue (CAQ) interface.
   /// Used by FPU to notify Snitch LSU of retired loads/stores.
@@ -318,6 +320,7 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
   `FFAR(csr_stall_q, csr_stall_d, '0, clk_i, rst_i)
 
   typedef struct packed {
+    logic                  fdualssr;
     fpnew_pkg::fmt_mode_t  fmode;
     fpnew_pkg::roundmode_e frm;
     fpnew_pkg::status_t    fflags;
@@ -326,6 +329,7 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
 
   assign fpu_rnd_mode_o = fcsr_q.frm;
   assign fpu_fmt_mode_o = fcsr_q.fmode;
+  assign fpu_dual_ssr_o = fcsr_q.fdualssr;
 
   // Registers
   `FFAR(pc_q, pc_d, BootAddr, clk_i, rst_i)
@@ -1705,6 +1709,23 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
           illegal_inst = 1'b1;
         end
       end
+      // MXDOTP,
+      MXDOTP_B0,
+      MXDOTP_B1,
+      MXDOTP_B2,
+      MXDOTP_B3: begin
+        if (FP_EN && FLEN >= 64 && XFMXDOTP) begin // TODO: Check src data types
+          if (fcsr_q.fmode.dst == 1'b0 ||
+              (XF16ALT && fcsr_q.fmode.dst == 1'b1)) begin
+            write_rd = 1'b0;
+            acc_qvalid_o = valid_instr;
+          end else begin
+            illegal_inst = 1'b1;
+          end
+        end else begin
+          illegal_inst = 1'b1;
+        end
+      end
       // Offload FP-Int Instructions - fire and forget
       // Double Precision Floating-Point
       FLE_D,
@@ -2509,14 +2530,14 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
           end
           CSR_FMODE: begin
             if (FP_EN) begin
-              csr_rvalue = {30'b0, fcsr_q.fmode};
-              if (!exception) fcsr_d.fmode = fpnew_pkg::fmt_mode_t'(alu_result[1:0]);
+              csr_rvalue = {28'b0, fcsr_q.fmode};
+              if (!exception) fcsr_d.fmode = fpnew_pkg::fmt_mode_t'(alu_result[3:0]);
             end else illegal_csr = 1'b1;
           end
           CSR_FCSR: begin
             if (FP_EN) begin
-              csr_rvalue = {22'b0, fcsr_q};
-              if (!exception) fcsr_d = fcsr_t'(alu_result[9:0]);
+              csr_rvalue = {19'b0, fcsr_q};
+              if (!exception) fcsr_d = fcsr_t'(alu_result[12:0]);
             end else illegal_csr = 1'b1;
           end
           // HW cluster barrier
@@ -2955,9 +2976,11 @@ module snitch import snitch_pkg::*; import riscv_instr::*; #(
   // Make sure the instruction interface is stable. Otherwise, Snitch might violate the protocol at
   // the LSU or accelerator interface by withdrawing the valid signal.
   // TODO: Remove cacheability attribute, that should hold true for all instruction fetch transacitons.
+  `ifndef VERILATOR
   `ASSERT(InstructionInterfaceStable,
       (inst_valid_o && inst_ready_i && inst_cacheable_o) ##1 (inst_valid_o && $stable(inst_addr_o))
       |-> inst_ready_i && $stable(inst_data_i), clk_i, rst_i)
+  `endif
 
   // Snitch is a 32-bit processor so in case the memory subsystem is 64 bit
   // wide, there is a potential of `x`s to be returned. Its a bit of a nasty

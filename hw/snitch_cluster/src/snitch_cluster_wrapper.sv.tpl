@@ -124,43 +124,77 @@ package ${cfg['pkg_name']};
                         ${cfg['timing']['lat_comp_fp16']}, // FP16
                         ${cfg['timing']['lat_comp_fp8']}, // FP8
                         ${cfg['timing']['lat_comp_fp16_alt']}, // FP16alt
-                        ${cfg['timing']['lat_comp_fp8_alt']}  // FP8alt
+                        ${cfg['timing']['lat_comp_fp8_alt']},  // FP8alt
+                        0, // FP6
+                        0, // FP6alt
+                        0  // FP4
                       },
-                    '{1, 1, 1, 1, 1, 1},   // DIVSQRT
+                    '{1, 1, 1, 1, 1, 1, 0, 0, 0},   // DIVSQRT
                     '{${cfg['timing']['lat_noncomp']},
                       ${cfg['timing']['lat_noncomp']},
                       ${cfg['timing']['lat_noncomp']},
                       ${cfg['timing']['lat_noncomp']},
                       ${cfg['timing']['lat_noncomp']},
-                      ${cfg['timing']['lat_noncomp']}},   // NONCOMP
+                      ${cfg['timing']['lat_noncomp']},
+                      0, // FP6
+                      0, // FP6alt
+                      0  // FP4
+                    },   // NONCOMP
                     '{${cfg['timing']['lat_conv']},
                       ${cfg['timing']['lat_conv']},
                       ${cfg['timing']['lat_conv']},
                       ${cfg['timing']['lat_conv']},
                       ${cfg['timing']['lat_conv']},
-                      ${cfg['timing']['lat_conv']}},   // CONV
+                      ${cfg['timing']['lat_conv']},
+                      0, // FP6
+                      0, // FP6alt
+                      0  // FP4
+                    },   // CONV
                     '{${cfg['timing']['lat_sdotp']},
                       ${cfg['timing']['lat_sdotp']},
                       ${cfg['timing']['lat_sdotp']},
                       ${cfg['timing']['lat_sdotp']},
                       ${cfg['timing']['lat_sdotp']},
-                      ${cfg['timing']['lat_sdotp']}}    // DOTP
+                      ${cfg['timing']['lat_sdotp']},
+                      0, // FP6
+                      0, // FP6alt
+                      0  // FP4
+                    },    // DOTP
+                    '{${cfg['timing']['lat_sdotp']},
+                      ${cfg['timing']['lat_sdotp']},
+                      ${cfg['timing']['lat_sdotp']},
+                      ${cfg['timing']['lat_sdotp']},
+                      ${cfg['timing']['lat_sdotp']},
+                      ${cfg['timing']['lat_sdotp']},
+                      0, // FP6
+                      0, // FP6alt
+                      0  // FP4
+                    }    // MXDOTP -> single datapath
                     },
         UnitTypes: '{'{fpnew_pkg::MERGED,
                        fpnew_pkg::MERGED,
                        fpnew_pkg::MERGED,
                        fpnew_pkg::MERGED,
                        fpnew_pkg::MERGED,
-                       fpnew_pkg::MERGED},  // FMA
+                       fpnew_pkg::MERGED,
+                       fpnew_pkg::DISABLED,
+                       fpnew_pkg::DISABLED,
+                       fpnew_pkg::DISABLED},  // FMA
 % if c["Xdiv_sqrt"]:
                     '{fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
-                        fpnew_pkg::MERGED}, // DIVSQRT
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED}, // DIVSQRT
 % else:
                     '{fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
@@ -172,27 +206,60 @@ package ${cfg['pkg_name']};
                         fpnew_pkg::PARALLEL,
                         fpnew_pkg::PARALLEL,
                         fpnew_pkg::PARALLEL,
-                        fpnew_pkg::PARALLEL}, // NONCOMP
+                        fpnew_pkg::PARALLEL,                        
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED}, // NONCOMP
                     '{fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
-                        fpnew_pkg::MERGED},   // CONV
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED},   // CONV
 % if c["xfdotp"]:
                     '{fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
                         fpnew_pkg::MERGED,
-                        fpnew_pkg::MERGED}},  // DOTP
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED},  // DOTP
 % else:
                     '{fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
                         fpnew_pkg::DISABLED,
-                        fpnew_pkg::DISABLED}}, // DOTP
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED}, // DOTP
+% endif
+% if c["xfmxdotp"]:
+                    '{fpnew_pkg::MERGED,
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::MERGED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED}},  // MXDOTP
+% else:
+                    '{fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED,
+                        fpnew_pkg::DISABLED}},  // MXDOTP
 % endif
         PipeConfig: fpnew_pkg::${cfg['timing']['fpu_pipe_config']}
     }${',\n' if not loop.last else '\n'}\
@@ -208,6 +275,13 @@ ${ssr_cfg(core, "'{{{indirection:d}, {isect_master:d}, {isect_master_idx:d}, {is
 
   localparam logic [${cfg['num_ssrs_max']}-1:0][4:0] SsrRegs [${cfg['nr_cores']}] = '{
 ${ssr_cfg(core, '{reg_idx}', '/*None*/ 0', ',')}\
+  };
+
+  localparam int unsigned NumSsrs [${cfg['nr_cores']}] = '{${core_cfg('num_ssrs')}};
+  localparam int unsigned NumMemSsrs [${cfg['nr_cores']}] = '{
+% for c in cfg['cores']:
+    ${ (c['num_ssrs'] - 1) if (c['xfmxdotp'] and c['num_ssrs'] == 4) else c['num_ssrs'] }${ ',' if not loop.last else '' }
+% endfor
   };
 
   // Forward potentially optional configuration parameters
@@ -245,7 +319,6 @@ module ${cfg['name']}_wrapper (
   localparam int unsigned NumDTLBEntries [${cfg['nr_cores']}] = '{${core_cfg('num_dtlb_entries')}};
   localparam int unsigned NumITLBEntries [${cfg['nr_cores']}] = '{${core_cfg('num_itlb_entries')}};
   localparam int unsigned NumSequencerInstr [${cfg['nr_cores']}] = '{${core_cfg('num_sequencer_instructions')}};
-  localparam int unsigned NumSsrs [${cfg['nr_cores']}] = '{${core_cfg('num_ssrs')}};
   localparam int unsigned SsrMuxRespDepth [${cfg['nr_cores']}] = '{${core_cfg('ssr_mux_resp_depth')}};
 
   // Snitch cluster under test.
@@ -289,6 +362,7 @@ module ${cfg['name']}_wrapper (
     .XF8ALT (${core_cfg_flat('xf8alt')}),
     .XFVEC (${core_cfg_flat('xfvec')}),
     .XFDOTP (${core_cfg_flat('xfdotp')}),
+    .XFMXDOTP (${core_cfg_flat('xfmxdotp')}),
     .Xdma (${core_cfg_flat('xdma')}),
     .Xssr (${core_cfg_flat('xssr')}),
     .Xfrep (${core_cfg_flat('xfrep')}),
@@ -301,7 +375,8 @@ module ${cfg['name']}_wrapper (
     .NumDTLBEntries (NumDTLBEntries),
     .NumITLBEntries (NumITLBEntries),
     .NumSsrsMax (${cfg['num_ssrs_max']}),
-    .NumSsrs (NumSsrs),
+    .NumSsrs (${cfg['pkg_name']}::NumSsrs),
+    .NumMemSsrs (${cfg['pkg_name']}::NumMemSsrs),
     .SsrMuxRespDepth (SsrMuxRespDepth),
     .SsrRegs (${cfg['pkg_name']}::SsrRegs),
     .SsrCfgs (${cfg['pkg_name']}::SsrCfgs),

@@ -88,6 +88,8 @@ module snitch_cluster
   parameter bit [NrCores-1:0] XFVEC         = '0,
   /// Enable DOTP support.
   parameter bit [NrCores-1:0] XFDOTP        = '0,
+  /// Enable MXDOTP support.
+  parameter bit [NrCores-1:0] XFMXDOTP      = '0,
   /// Per-core enabling of the custom `Xdma` ISA extensions.
   parameter bit [NrCores-1:0] Xdma          = '0,
   /// Per-core enabling of the custom `Xssr` ISA extensions.
@@ -117,6 +119,8 @@ module snitch_cluster
   parameter int unsigned NumSsrsMax = 0,
   /// Per-core number of SSRs.
   parameter int unsigned NumSsrs [NrCores] = '{default: 0},
+  /// Per-core number of memory ports for SSRs. (Different from NumSsrs only for MXDOTP).
+  parameter int unsigned NumMemSsrs [NrCores] = '{default: 0},
   /// Per-core depth of TCDM Mux unifying SSR 0 and Snitch requests.
   parameter int unsigned SsrMuxRespDepth [NrCores] = '{default: 0},
   /// Per-core internal parameters for each SSR.
@@ -255,7 +259,7 @@ module snitch_cluster
   localparam int unsigned NrSuperBanks = NrBanks / BanksPerSuperBank;
 
   function automatic int unsigned get_tcdm_ports(int unsigned core);
-    return (NumSsrs[core] > 1 ? NumSsrs[core] : 1);
+    return (NumMemSsrs[core] > 1 ? NumMemSsrs[core] : 1);
   endfunction
 
   function automatic int unsigned get_tcdm_port_offs(int unsigned core_idx);
@@ -892,6 +896,7 @@ module snitch_cluster
         .XF8ALT (XF8ALT[i]),
         .XFVEC (XFVEC[i]),
         .XFDOTP (XFDOTP[i]),
+        .XFMXDOTP (XFMXDOTP[i]),
         .Xdma (Xdma[i]),
         .IsoCrossing (IsoCrossing),
         .Xfrep (Xfrep[i]),
@@ -907,6 +912,7 @@ module snitch_cluster
         .NumITLBEntries (NumITLBEntries[i]),
         .NumSequencerInstr (NumSequencerInstr[i]),
         .NumSsrs (NumSsrs[i]),
+        .NumMemSsrs (NumMemSsrs[i]),
         .SsrMuxRespDepth (SsrMuxRespDepth[i]),
         .SsrCfgs (SsrCfgs[i][NumSsrs[i]-1:0]),
         .SsrRegs (SsrRegs[i][NumSsrs[i]-1:0]),
