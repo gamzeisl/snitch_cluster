@@ -106,6 +106,7 @@
         xf8: true,
         xf8alt: true,
         xfdotp: true,
+        xfmxdotp: true,
         xfvec: true,
         ssr_nr_credits: 4,
         num_int_outstanding_loads: 1,
@@ -118,10 +119,12 @@
         // SSSR configuration below
         ssr_intersection: true,
         ssr_intersection_triple: [0, 1, 2],
+        // 4 SSRs for MXDOTP
         ssrs: [
             {indirection: true},    // Master 0
             {indirection: true},    // Master 1
-            {},                     // Slave
+            {rpt_width: 6},         // Slave
+            {rpt_width: 6},
         ],
     },
     dma_core_template: {
@@ -134,6 +137,7 @@
         xf8: false,
         xf8alt: false,
         xfdotp: false,
+        xfmxdotp: false,
         xfvec: false,
         num_int_outstanding_loads: 1,
         num_int_outstanding_mem: 4,

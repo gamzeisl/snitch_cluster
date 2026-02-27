@@ -107,6 +107,7 @@
         xf8: true,
         xf8alt: true,
         xfdotp: true,
+        xfmxdotp: true,
         xfvec: true,
         ssr_nr_credits: 4,
         num_int_outstanding_loads: 1,

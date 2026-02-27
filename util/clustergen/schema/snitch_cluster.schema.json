@@ -463,6 +463,12 @@
                                     "description": "Enable DOTP extensions.",
                                     "default": false
                                 },
+                                "xfmxdotp": {
+                                    "type": "boolean",
+                                    "title": "Xfmxdotp Extension",
+                                    "description": "Enable MXDOTP extensions.",
+                                    "default": false
+                                },
                                 "xfvec": {
                                     "type": "boolean",
                                     "title": "Xfvec Extension",
