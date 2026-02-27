@@ -90,7 +90,7 @@ OPER_TYPES = {'gpr': 1, 'csr': 8}
 
 FPU_OPER_TYPES = ('NONE', 'acc', 'rs1', 'rs2', 'rs3', 'rs1', 'rd')
 
-FLOAT_FMTS = ((8, 23), (11, 52), (5, 10), (5, 2), (8, 7), (4, 3))
+FLOAT_FMTS = ((8, 23), (11, 52), (5, 10), (5, 2), (8, 7), (4, 3), (3, 2), (2, 3), (2, 1))
 
 LS_TO_FLOAT = (3, 2, 0, 1)
 
@@ -438,6 +438,12 @@ def flt_oper(insn: str, extras: dict, port: int) -> (str, str):
     op_sel = extras['op_sel_{}'.format(port)]
     oper_type = FPU_OPER_TYPES[op_sel]
 
+    if 'mxdotp' in insn:
+        # Here we have to handle the special case of mxdotp
+        # instead of printing Rd we print Rs3(=scale)
+        if op_sel == 6:
+            oper_type = FPU_OPER_TYPES[4]
+
     # Assign default return values
     reg = oper_type
     lit = None
@@ -452,6 +458,11 @@ def flt_oper(insn: str, extras: dict, port: int) -> (str, str):
         vlen = flt_op_vlen(insn, oper_type)
         fmt = flt_op_fmt(extras, port)
         enc = extras['op_{}'.format(port)]
+        if 'mxdotp' in insn and op_sel == 6:
+            # extract scales as uint8_t
+            s_0 = (enc & 0x000000FF00000000) >> 32
+            s_1 = (enc & 0x0000FF0000000000) >> 40
+            return REG_ABI_NAMES_F[extras[oper_type]], '[{}, {}]'.format(s_1, s_0)
         # Return register name and floating-point literal
         return REG_ABI_NAMES_F[extras[oper_type]], flt_lit(enc, fmt, vlen=vlen)
     return reg, lit

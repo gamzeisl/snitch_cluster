@@ -272,6 +272,7 @@ def from_buffer(byte_array, ctype='uint32_t'):
     """
     # Types which have a direct correspondence in Numpy
     NP_DTYPE_FROM_CTYPE = {
+        'uint16_t': np.uint16,
         'uint32_t': np.uint32,
         'double': np.float64,
         'float': np.float32,
@@ -367,7 +368,7 @@ def validate_tcdm_footprint(size, silent=False):
         size: The size of the data in bytes.
         silent: If True, will not print the size to stdout.
     """
-    assert size < TCDM_HEAP_SIZE, \
+    assert size <= TCDM_HEAP_SIZE, \
         f'Total heap space required {humanize.naturalsize(size, binary=True)} exceeds ' \
         f'limit of {humanize.naturalsize(TCDM_HEAP_SIZE, binary=True)}'
     if not silent:

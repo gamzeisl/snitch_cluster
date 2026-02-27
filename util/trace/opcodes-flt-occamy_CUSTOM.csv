@@ -247,10 +247,11 @@ vfcvt.x.s,,,,
 vfcvt.xu.s,,,,
 vfcvt.s.x,,,,
 vfcvt.s.xu,,,,
-vfcpka.s.s,32,1,32,2
-vfcpkb.s.s,32,1,32,2
-vfcpkc.s.s,32,1,32,2
-vfcpkd.s.s,32,1,32,2
+vfcpka.s.s,32,2,32,2
+vfcpkb.s.s,32,2,32,2
+vfcpkc.s.s,32,2,32,2
+vfcpkd.s.s,32,2,32,2
+vfcpk.s.s.0,32,2,32,2
 vfcpka.s.d,64,1,32,2
 vfcpkb.s.d,64,1,32,2
 vfcpkc.s.d,64,1,32,2
@@ -553,3 +554,4 @@ vfdotpex.ah.ab,8,8,16,4
 vfdotpex.ah.r.ab,8,8,16,4
 vfndotpex.ah.ab,8,8,16,4
 vfndotpex.ah.r.ab,8,8,16,4
+mxdotp,8,8,32,2

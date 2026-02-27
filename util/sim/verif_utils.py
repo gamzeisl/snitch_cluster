@@ -183,7 +183,21 @@ class Verifier:
         """
         # Compute absolute error
         expected, actual = map(flatten, (expected, actual))
-        err = np.abs(expected - actual)
+
+        # Initialize error array
+        err = np.zeros_like(expected, dtype=expected.dtype)
+
+        # Handle NaN and Inf cases
+        nan_mask = np.isnan(expected) & np.isnan(actual)
+        inf_mask = np.isinf(expected) & np.isinf(actual) & (expected == actual)
+
+        # General case: compute absolute difference for finite values
+        finite_mask = ~(nan_mask | inf_mask | np.isnan(expected) | np.isnan(actual))
+        err[finite_mask] = np.abs(expected[finite_mask] - actual[finite_mask])
+
+        # Special case: both NaN or both Inf
+        err[nan_mask | inf_mask] = 0
+
         # Check absolute or relative error
         if atol is not None and rtol is not None:
             raise ValueError('atol and rtol are mutually exclusive.')
@@ -193,14 +207,14 @@ class Verifier:
             if expected.dtype == np.dtype(object):
                 success = np.all(err <= max_err)
             else:
-                success = np.allclose(expected, actual, atol=atol, rtol=0, equal_nan=False)
+                success = np.allclose(expected, actual, atol=atol, rtol=0, equal_nan=True)
         elif rtol is not None:
             max_err = rtol * np.abs(expected)
             # Handle FlexFloat arrays differently
             if expected.dtype == np.dtype(object):
                 success = np.all(err <= max_err)
             else:
-                success = np.allclose(expected, actual, atol=0, rtol=rtol, equal_nan=False)
+                success = np.allclose(expected, actual, atol=0, rtol=rtol, equal_nan=True)
         else:
             raise ValueError('Either atol or rtol must be specified.')
 
