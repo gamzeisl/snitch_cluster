@@ -5,7 +5,10 @@
 // Author: Fabian Schuiki <fschuiki@iis.ee.ethz.ch>
 // Author: Florian Zaruba <zarubaf@iis.ee.ethz.ch>
 
+`include "common_cells/registers.svh"
+
 module snitch_ssr_switch #(
+  parameter bit          XFMXDOTP   = 0,
   parameter int unsigned DataWidth  = 0,
   parameter int unsigned NumSsrs    = 0,
   parameter int unsigned RPorts     = 0,
@@ -15,6 +18,8 @@ module snitch_ssr_switch #(
   parameter int unsigned Ports = RPorts + WPorts,
   parameter type data_t = logic [DataWidth-1:0]
 ) (
+  input  logic                    clk_i,
+  input  logic                    rst_ni,
   // Read and write streams coming from the processor.
   input  logic  [RPorts-1:0][4:0] ssr_raddr_i,
   output data_t [RPorts-1:0]      ssr_rdata_o,
@@ -32,7 +37,9 @@ module snitch_ssr_switch #(
   output data_t [NumSsrs-1:0]     lane_wdata_o,
   output logic  [NumSsrs-1:0]     lane_write_o,
   input  logic  [NumSsrs-1:0]     lane_valid_i,
-  output logic  [NumSsrs-1:0]     lane_ready_o
+  output logic  [NumSsrs-1:0]     lane_ready_o,
+  // MXDOTP dual SSR mode
+  input  logic                    dual_ssr_en_i
 );
 
   logic   [Ports-1:0][4:0] ssr_addr;
@@ -65,24 +72,76 @@ module snitch_ssr_switch #(
     end
   end
 
+  logic [NumSsrs-1:0] lane_ready_int;
+  data_t [Ports-1:0] ssr_rdata_int;
+  logic  [Ports-1:0] ssr_ready_int;
+
   always_comb begin
-    lane_ready_o = '0;
+    lane_ready_int = '0;
     lane_wdata_o = '0;
     lane_write_o = '0;
-    ssr_rdata = '0;
-    ssr_ready = '0;
+    ssr_rdata_int = '0;
+    ssr_ready_int = '0;
 
     for (int o = 0; o < NumSsrs; o++) begin
       for (int i = 0; i < Ports; i++) begin
         if (ssr_valid[i] && ssr_addr[i] == SsrRegs[o]) begin
           lane_wdata_o[o] = ssr_wdata[i];
-          lane_ready_o[o] = ssr_done[i];
+          lane_ready_int[o] = ssr_done[i];
           lane_wdata_o[o] = ssr_wdata[i];
           lane_write_o[o] = ssr_write[i];
-          ssr_rdata[i] = lane_rdata_i[o];
-          ssr_ready[i] = lane_valid_i[o];
+          ssr_rdata_int[i] = lane_rdata_i[o];
+          ssr_ready_int[i] = lane_valid_i[o];
         end
       end
     end
+  end
+
+  if (XFMXDOTP && NumSsrs == 4) begin : gen_dual_ssr
+    // Internal signals
+    logic [1:0] scale_counter_d, scale_counter_q;
+    logic scale_toggle_d, scale_toggle_q;
+    logic [31:0] scale_a, scale_b;
+
+    // Registers
+    `FF(scale_counter_q, scale_counter_d, '0, clk_i, rst_ni)
+    `FF(scale_toggle_q, scale_toggle_d, 0, clk_i, rst_ni)
+
+    always_comb begin
+      lane_ready_o = lane_ready_int;
+      ssr_rdata = ssr_rdata_int;
+      ssr_ready = ssr_ready_int;
+
+      scale_counter_d = scale_counter_q;
+      scale_toggle_d = scale_toggle_q;
+
+      if (dual_ssr_en_i) begin
+        // In dual SSR mode, the first two SSRs are used to read scale_a and scale_b
+        // for the MXDOTP instruction from the 3rd and 4th SSRs.
+        scale_a = {24'b0, lane_rdata_i[2][7:0]};
+        if (scale_toggle_q == 0) begin
+          scale_b = lane_rdata_i[3][31:0];
+        end else begin
+          scale_b = lane_rdata_i[3][63:32];
+        end
+
+        if (ssr_valid[2] && ssr_addr[2] == 2) begin // read
+          lane_ready_o[2] = ssr_done[2];
+          lane_ready_o[3] = ssr_done[2];
+          ssr_rdata[2] = {scale_b, scale_a};
+          ssr_ready[2] = lane_valid_i[2] && lane_valid_i[3];
+          if (ssr_done[2]) begin
+            scale_counter_d = scale_counter_q + 1;
+            if (scale_counter_q[1:0] == 3) begin
+              scale_toggle_d = ~scale_toggle_q;
+            end
+          end
+        end
+      end
+    end
+  end else begin: gen_no_dual_ssr
+    assign lane_ready_o = lane_ready_int;
+    assign ssr_rdata = ssr_rdata_int;
+    assign ssr_ready = ssr_ready_int;
   end
 endmodule

@@ -38,6 +38,7 @@ enum snrt_ssr_dm {
     SNRT_SSR_DM0 = 0,    /**< SSR data mover 0 */
     SNRT_SSR_DM1 = 1,    /**< SSR data mover 1 */
     SNRT_SSR_DM2 = 2,    /**< SSR data mover 2 */
+    SNRT_SSR_DM3 = 3,    /**< SSR data mover 3 */
     SNRT_SSR_DM_ALL = 31 /**< Write to all SSRs */
 };
 

@@ -304,7 +304,7 @@ module snitch_ssr_addr_gen import snitch_ssr_pkg::*; #(
       stride_sd[i] = stride_sq[i];
       bound_sd[i] = bound_sq[i];
       if (write_strobe.stride[i])
-        stride_sd[i] = cfg_wdata_i & WordAddrMask;
+        stride_sd[i] = cfg_wdata_i;
       if (write_strobe.bound[i])
         bound_sd[i] = cfg_wdata_i;
     end

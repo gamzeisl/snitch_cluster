@@ -6,10 +6,13 @@
 // Author: Paul Scheffler <paulsc@iis.ee.ethz.ch>
 
 `include "common_cells/assertions.svh"
+`include "common_cells/registers.svh"
 `include "snitch_ssr/typedef.svh"
 
 module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
+  parameter bit          XFMXDOTP   = 0,
   parameter int unsigned NumSsrs    = 0,
+  parameter int unsigned NumMemSsrs = 0, // Number of memory ports for SSRs (different from NumSsrs only for MXDOTP)
   parameter int unsigned RPorts     = 0,
   parameter int unsigned WPorts     = 0,
   parameter int unsigned AddrWidth  = 0,
@@ -44,12 +47,14 @@ module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
   output logic  [WPorts-1:0]      ssr_wready_o,
   input  logic  [WPorts-1:0]      ssr_wdone_i,
   // Ports into memory.
-  output tcdm_req_t [NumSsrs-1:0] mem_req_o,
-  input  tcdm_rsp_t [NumSsrs-1:0] mem_rsp_i,
+  output tcdm_req_t [NumMemSsrs-1:0] mem_req_o,
+  input  tcdm_rsp_t [NumMemSsrs-1:0] mem_rsp_i,
   // From intersector to stream controller
   output logic             streamctl_done_o,
   output logic             streamctl_valid_o,
-  input  logic             streamctl_ready_i
+  input  logic             streamctl_ready_i,
+  // MXDOTP dual SSR mode
+  input  logic             dual_ssr_en_i
 );
 
   // Derive intersection-related configuration from SSR configurations.
@@ -110,12 +115,15 @@ module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
   logic [NumSsrs-1:0]       dmcfg_strobe; // which data mover is currently addressed
   logic [NumSsrs-1:0]       dmcfg_wready;
   snitch_ssr_switch #(
+    .XFMXDOTP  ( XFMXDOTP   ),
     .DataWidth ( DataWidth  ),
     .NumSsrs   ( NumSsrs    ),
     .RPorts    ( RPorts     ),
     .WPorts    ( WPorts     ),
     .SsrRegs   ( SsrRegs    )
   ) i_switch (
+    .clk_i,
+    .rst_ni,
     .ssr_raddr_i,
     .ssr_rdata_o,
     .ssr_rvalid_i,
@@ -130,9 +138,12 @@ module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
     .lane_wdata_o ( lane_wdata ),
     .lane_write_o ( lane_write ),
     .lane_valid_i ( lane_valid ),
-    .lane_ready_o ( lane_ready )
+    .lane_ready_o ( lane_ready ),
+    .dual_ssr_en_i
   );
 
+  tcdm_req_t [NumSsrs-1:0] mem_req;
+  tcdm_rsp_t [NumSsrs-1:0] mem_rsp;
   for (genvar i = 0; i < NumSsrs; i++) begin : gen_ssrs
     snitch_ssr #(
       .Cfg          ( SsrCfgs [i] ),
@@ -157,8 +168,8 @@ module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
       .lane_wdata_i   ( lane_wdata   [i]  ),
       .lane_valid_o   ( lane_valid   [i]  ),
       .lane_ready_i   ( lane_ready   [i]  ),
-      .mem_req_o      ( mem_req_o    [i]  ),
-      .mem_rsp_i      ( mem_rsp_i    [i]  ),
+      .mem_req_o      ( mem_req      [i]  ),
+      .mem_rsp_i      ( mem_rsp      [i]  ),
       .isect_mst_req_o  ( isect_mst_req [i] ),
       .isect_slv_req_o  ( isect_slv_req [i] ),
       .isect_mst_rsp_i  ( isect_mst_rsp [SsrCfgs[i].IsectMasterIdx] ),
@@ -212,4 +223,66 @@ module snitch_ssr_streamer import snitch_ssr_pkg::*; #(
     end
   end
 
+
+  if (XFMXDOTP && NumSsrs == 4) begin : gen_dual_ssr_mux
+    // Internal indices for port 2 and 3 (dual SSR handling)
+    localparam int SSR2_IDX = 0;
+    localparam int SSR3_IDX = 1;
+
+    // Internal signals
+    tcdm_rsp_t [1:0] mem_rsp_int;
+    logic      [1:0][2:0] stride_q, stride_d;
+
+    // Registers
+    `FF(stride_q, stride_d, '0, clk_i, rst_ni)
+
+    // TCDM MUX (for ports 2 and 3)
+    tcdm_mux #(
+      .NrPorts    ( 2             ),
+      .AddrWidth  ( AddrWidth     ),
+      .DataWidth  ( DataWidth     ),
+      .user_t     ( tcdm_user_t   ),
+      .RespDepth  ( 4             ),
+      .tcdm_req_t ( tcdm_req_t    ),
+      .tcdm_rsp_t ( tcdm_rsp_t    )
+    ) i_tcdm_mux (
+      .clk_i,
+      .rst_ni,
+      .slv_req_i  ( {mem_req[2], mem_req[3]} ),
+      .slv_rsp_o  ( {mem_rsp_int[SSR2_IDX], mem_rsp_int[SSR3_IDX]} ),
+      .mst_req_o  ( mem_req_o[2] ),
+      .mst_rsp_i  ( mem_rsp_i[2] )
+    );
+
+    // Since scales are 8-bit, we keep track of the 3 LSBs of the address
+    // to determine the byte offset within a 64-bit word.
+    always_comb begin
+      stride_d = stride_q;
+      mem_rsp[2]  = mem_rsp_int[SSR2_IDX];
+      mem_rsp[3]  = mem_rsp_int[SSR3_IDX];
+
+      if (dual_ssr_en_i) begin
+        // Shift the data according to the stride of the request
+        // Always one cycle latency after the request
+        mem_rsp[2].p.data = mem_rsp_int[SSR2_IDX].p.data >> (stride_q[SSR2_IDX] * 8);
+        mem_rsp[3].p.data = mem_rsp_int[SSR3_IDX].p.data >> (stride_q[SSR3_IDX] * 8);
+
+        // Update stride values on valid transaction
+        if (mem_req[2].q_valid && mem_rsp_int[SSR2_IDX].q_ready)
+          stride_d[SSR2_IDX] = mem_req[2].q.addr[2:0];
+
+        if (mem_req[3].q_valid && mem_rsp_int[SSR3_IDX].q_ready)
+          stride_d[SSR3_IDX] = mem_req[3].q.addr[2:0];
+      end
+    end
+
+    // These ports are not affected by dual SSR mode
+    assign mem_req_o[0] = mem_req[0];
+    assign mem_req_o[1] = mem_req[1];
+    assign mem_rsp[0]   = mem_rsp_i[0];
+    assign mem_rsp[1]   = mem_rsp_i[1];
+  end else begin : gen_no_dual_ssr_mux
+    assign mem_req_o = mem_req;
+    assign mem_rsp   = mem_rsp_i;
+  end
 endmodule
