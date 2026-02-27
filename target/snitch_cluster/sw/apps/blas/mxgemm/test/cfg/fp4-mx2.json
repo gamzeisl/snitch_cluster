@@ -1,0 +1,26 @@
+// Copyright 2024 ETH Zurich and University of Bologna.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+
+{
+    setup_ssr: 1,
+    parallelize_m: 0,
+    parallelize_k: 0,
+    m_tiles: 1, // number of tiles in M dimension
+    n_tiles: 1, // number of tiles in N dimension
+    k_tiles: 1, // number of tiles in K dimension
+    load_a: 1,
+    load_b: 1,
+    load_c: 1,
+    transa: false,
+    transb: true, // must be true for SIMD
+    M: 32,
+    N: 16,
+    K: 64,
+    block_size: 32,
+    alpha: 1,
+    beta: 0,
+    gemm_fp: "mxgemm_fp8_opt_ex",
+    src_type: "FP4",
+    dst_type: "FP32"
+}

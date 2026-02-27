@@ -17,9 +17,22 @@ $(APP)_INCDIRS      += $(dir $(DATA_H)) $(SRC_DIR)
 $(APP)_DATAGEN_ARGS += -c $($(APP)_DATA_CFG)
 $(APP)_DATAGEN_ARGS += --section="$(SECTION)"
 
+# Configuration for mxgemm
+CONFIG_H     := $($(APP)_BUILD_DIR)/config.h
+CONFIGGEN_PY  = $(SCRIPTS_DIR)/configgen.py
+
+ifeq ($(APP),mxgemm)
+$(APP)_HEADERS += $(CONFIG_H)
+endif
+
 $(dir $(DATA_H)):
 	mkdir -p $@
 
 $(DATA_H): DATAGEN_ARGS := $($(APP)_DATAGEN_ARGS)
 $(DATA_H): $(DATAGEN_PY) $($(APP)_DATA_CFG) | $(dir $(DATA_H))
 	$< $(DATAGEN_ARGS) $@
+
+
+$(CONFIG_H): DATAGEN_ARGS := -c $($(APP)_DATA_CFG)
+$(CONFIG_H): $(CONFIGGEN_PY) $($(APP)_DATA_CFG) | $(dir $(CONFIG_H))
+	$< $(DATAGEN_ARGS) -o $@
