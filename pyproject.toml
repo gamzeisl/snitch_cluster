@@ -33,6 +33,7 @@ dependencies = [
     "mkdocs-macros-plugin",
     "mkdocstrings",
     "mkdocstrings-python",
+    "mpmath==1.3.0",
     "numpy",
     "pandas",
     "prettytable",
