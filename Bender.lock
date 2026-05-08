@@ -56,7 +56,7 @@ packages:
       Git: https://github.com/pulp-platform/common_verification.git
     dependencies: []
   fpnew:
-    revision: 669ba206fabdbdd62fd1e2aea499f5c84963b242
+    revision: 57989f3bf35a8670b2a035fd2b5e979cdd695946
     version: null
     source:
       Git: https://github.com/gamzeisl/cvfpu.git

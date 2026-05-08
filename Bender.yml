@@ -30,7 +30,7 @@ dependencies:
   idma: 0.6.5
   axi:                { git: https://github.com/colluca/axi.git,                      rev:      multicast   }
   common_cells:       { git: https://github.com/pulp-platform/common_cells.git,       rev:      snitch      }
-  FPnew:              { git: https://github.com/gamzeisl/cvfpu.git,                   rev:      669ba206fabdbdd62fd1e2aea499f5c84963b242 }
+  FPnew:              { git: https://github.com/gamzeisl/cvfpu.git,                   rev:      57989f3bf35a8670b2a035fd2b5e979cdd695946 }
 
 export_include_dirs:
   - hw/reqrsp_interface/include
