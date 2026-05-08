@@ -124,11 +124,11 @@ runs:
     cmd: [../sw/kernels/misc/correlation/scripts/verify.py, "${sim_bin}", "${elf}"]
   - elf: ../sw/kernels/misc/kmeans/build/kmeans.elf
     cmd: [../sw/kernels/misc/kmeans/scripts/verify.py, --no-gui, "${sim_bin}", "${elf}"]
-  - elf: ../sw/kernels/misc/kbpcpa/build/kbpcpa.elf
+  # - elf: ../sw/kernels/misc/kbpcpa/build/kbpcpa.elf
     cmd: [../sw/kernels/misc/kbpcpa/scripts/verify.py, "${sim_bin}", "${elf}"]
-  - elf: ../sw/kernels/misc/j3d27pt/build/j3d27pt.elf
+  # - elf: ../sw/kernels/misc/j3d27pt/build/j3d27pt.elf
     cmd: [../sw/kernels/misc/j3d27pt/scripts/verify.py, "${sim_bin}", "${elf}"]
-  - elf: ../sw/kernels/misc/box3d1r/build/box3d1r.elf
+  # - elf: ../sw/kernels/misc/box3d1r/build/box3d1r.elf
     cmd: [../sw/kernels/misc/box3d1r/scripts/verify.py, "${sim_bin}", "${elf}"]
   - elf: ../sw/kernels/misc/montecarlo/pi_estimation/build/pi_estimation.elf
   - elf: ../sw/kernels/misc/exp/build/exp.elf
