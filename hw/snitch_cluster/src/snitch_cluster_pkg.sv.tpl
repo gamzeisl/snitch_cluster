@@ -213,7 +213,7 @@ package ${cfg['cluster']['name']}_pkg;
                         0, // FP6alt
                         0  // FP4
                       },
-                    '{1, 1, 1, 1, 1, 1, 0, 0, 0},   // DIVSQRT
+                    '{0, 0, 0, 0, 0, 0, 0, 0, 0},   // DIVSQRT
                     '{${cfg['cluster']['timing']['lat_noncomp']},
                       ${cfg['cluster']['timing']['lat_noncomp']},
                       ${cfg['cluster']['timing']['lat_noncomp']},
